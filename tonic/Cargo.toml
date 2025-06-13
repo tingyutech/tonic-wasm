@@ -29,8 +29,8 @@ prost = ["dep:prost"]
 _tls-any = ["dep:tokio-rustls", "dep:tokio", "tokio?/rt", "tokio?/macros"] # Internal. Please choose one of `tls-ring` or `tls-aws-lc`
 tls-ring = ["_tls-any", "tokio-rustls/ring"]
 tls-aws-lc = ["_tls-any", "tokio-rustls/aws-lc-rs"]
-tls-native-roots = ["_tls-any", "channel", "dep:rustls-native-certs"]
-tls-webpki-roots = ["_tls-any","channel", "dep:webpki-roots"]
+tls-native-roots = ["_tls-any", "channel", "channel-native", "dep:rustls-native-certs"]
+tls-webpki-roots = ["_tls-any","channel", "channel-native", "dep:webpki-roots"]
 router = ["dep:axum", "dep:tower", "tower?/util"]
 server = [
   "dep:h2",
@@ -41,14 +41,31 @@ server = [
   "tokio-stream/net",
   "dep:tower", "tower?/util", "tower?/limit", "tower?/load-shed",
 ]
-channel = [
+channel = []
+channel-native = [
   "dep:hyper", "hyper?/client",
-  "dep:hyper-util", "hyper-util?/client-legacy",
-  "dep:tower", "tower?/balance", "tower?/buffer", "tower?/discover", "tower?/limit", "tower?/load-shed", "tower?/util",
+  "dep:hyper-util",
+  "hyper-util?/client-legacy",
+  "dep:tower",
+  "tower?/balance",
+  "tower?/buffer",
+  "tower?/discover",
+  "tower?/limit",
+  "tower?/util",
   "dep:tokio", "tokio?/time",
   "dep:hyper-timeout",
 ]
-transport = ["server", "channel"]
+channel-web = [
+  "dep:hyper", "hyper?/client",
+  "dep:tower",
+  "tower?/balance",
+  "tower?/buffer",
+  "tower?/discover",
+  "tower?/limit",
+  "tower?/util",
+  "dep:tokio", "tokio?/time",
+]
+transport = ["server", "channel", "channel-native"]
 
 # [[bench]]
 # name = "bench_main"

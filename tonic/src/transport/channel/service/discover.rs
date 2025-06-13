@@ -28,6 +28,7 @@ impl<K: Hash + Eq + Clone> DynamicServiceStream<K> {
     }
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 impl<K: Hash + Eq + Clone> Stream for DynamicServiceStream<K> {
     type Item = Result<TowerChange<K, Connection>, crate::BoxError>;
 
