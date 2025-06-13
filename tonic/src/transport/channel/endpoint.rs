@@ -1,6 +1,7 @@
 #[cfg(feature = "_tls-any")]
 use super::service::TlsConnector;
 use super::service::{self, Executor, SharedExec};
+#[cfg(not(target_arch = "wasm32"))]
 use super::uds_connector::UdsConnector;
 use super::Channel;
 #[cfg(feature = "_tls-any")]
@@ -11,6 +12,7 @@ use crate::transport::Error;
 use bytes::Bytes;
 use http::{uri::Uri, HeaderValue};
 use hyper::rt;
+#[cfg(not(target_arch = "wasm32"))]
 use hyper_util::client::legacy::connect::HttpConnector;
 use std::{fmt, future::Future, net::IpAddr, pin::Pin, str, str::FromStr, time::Duration};
 use tower_service::Service;
@@ -453,6 +455,7 @@ impl Endpoint {
         }
     }
 
+    #[cfg(not(target_arch = "wasm32"))]
     pub(crate) fn http_connector(&self) -> service::Connector<HttpConnector> {
         let mut http = HttpConnector::new();
         http.enforce_http(false);
@@ -465,14 +468,17 @@ impl Endpoint {
         self.connector(http)
     }
 
+    #[cfg(not(target_arch = "wasm32"))]
     pub(crate) fn uds_connector(&self, uds_filepath: &str) -> service::Connector<UdsConnector> {
         self.connector(UdsConnector::new(uds_filepath))
     }
 
     /// Create a channel from this config.
+    #[cfg(not(target_arch = "wasm32"))]
     pub async fn connect(&self) -> Result<Channel, Error> {
         match &self.uri {
             EndpointType::Uri(_) => Channel::connect(self.http_connector(), self.clone()).await,
+            #[cfg(not(target_arch = "wasm32"))]
             EndpointType::Uds(uds_filepath) => {
                 Channel::connect(self.uds_connector(uds_filepath.as_str()), self.clone()).await
             }
@@ -483,6 +489,7 @@ impl Endpoint {
     ///
     /// The channel returned by this method does not attempt to connect to the endpoint until first
     /// use.
+    #[cfg(not(target_arch = "wasm32"))]
     pub fn connect_lazy(&self) -> Channel {
         match &self.uri {
             EndpointType::Uri(_) => Channel::new(self.http_connector(), self.clone()),
@@ -508,11 +515,19 @@ impl Endpoint {
     {
         let connector = self.connector(connector);
 
-        if let Some(connect_timeout) = self.connect_timeout {
-            let mut connector = hyper_timeout::TimeoutConnector::new(connector);
-            connector.set_connect_timeout(Some(connect_timeout));
-            Channel::connect(connector, self.clone()).await
-        } else {
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            if let Some(connect_timeout) = self.connect_timeout {
+                let mut connector = hyper_timeout::TimeoutConnector::new(connector);
+                connector.set_connect_timeout(Some(connect_timeout));
+                Channel::connect(connector, self.clone()).await
+            } else {
+                Channel::connect(connector, self.clone()).await
+            }
+        }
+
+        #[cfg(target_arch = "wasm32")]
+        {
             Channel::connect(connector, self.clone()).await
         }
     }
@@ -532,11 +547,19 @@ impl Endpoint {
         crate::BoxError: From<C::Error> + Send,
     {
         let connector = self.connector(connector);
-        if let Some(connect_timeout) = self.connect_timeout {
-            let mut connector = hyper_timeout::TimeoutConnector::new(connector);
-            connector.set_connect_timeout(Some(connect_timeout));
-            Channel::new(connector, self.clone())
-        } else {
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            if let Some(connect_timeout) = self.connect_timeout {
+                let mut connector = hyper_timeout::TimeoutConnector::new(connector);
+                connector.set_connect_timeout(Some(connect_timeout));
+                Channel::new(connector, self.clone())
+            } else {
+                Channel::new(connector, self.clone())
+            }
+        }
+
+        #[cfg(target_arch = "wasm32")]
+        {
             Channel::new(connector, self.clone())
         }
     }

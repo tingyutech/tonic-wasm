@@ -3,6 +3,7 @@ use std::pin::Pin;
 use std::task::{Context, Poll};
 
 use hyper::rt;
+#[cfg(not(target_arch = "wasm32"))]
 use hyper_util::client::legacy::connect::{Connected as HyperConnected, Connection};
 
 pub(in crate::transport) trait Io:
@@ -20,6 +21,7 @@ impl BoxedIo {
     }
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 impl Connection for BoxedIo {
     fn connected(&self) -> HyperConnected {
         HyperConnected::new()

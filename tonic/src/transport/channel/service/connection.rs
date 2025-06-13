@@ -6,11 +6,13 @@ use crate::{
 use http::{Request, Response, Uri};
 use hyper::rt;
 use hyper::{client::conn::http2::Builder, rt::Executor};
+#[cfg(not(target_arch = "wasm32"))]
 use hyper_util::rt::TokioTimer;
 use std::{
     fmt,
     task::{Context, Poll},
 };
+#[cfg(not(target_arch = "wasm32"))]
 use tower::load::Load;
 use tower::{
     layer::Layer,
@@ -32,11 +34,19 @@ impl Connection {
         C::Future: Send,
         C::Response: rt::Read + rt::Write + Unpin + Send + 'static,
     {
+        #[cfg(not(target_arch = "wasm32"))]
         let mut settings: Builder<SharedExec> = Builder::new(endpoint.executor.clone())
             .initial_stream_window_size(endpoint.init_stream_window_size)
             .initial_connection_window_size(endpoint.init_connection_window_size)
             .keep_alive_interval(endpoint.http2_keep_alive_interval)
             .timer(TokioTimer::new())
+            .clone();
+
+        #[cfg(target_arch = "wasm32")]
+        let mut settings: Builder<SharedExec> = Builder::new(endpoint.executor.clone())
+            .initial_stream_window_size(endpoint.init_stream_window_size)
+            .initial_connection_window_size(endpoint.init_connection_window_size)
+            .keep_alive_interval(endpoint.http2_keep_alive_interval)
             .clone();
 
         if let Some(val) = endpoint.http2_keep_alive_timeout {
@@ -115,6 +125,7 @@ impl Service<Request<Body>> for Connection {
     }
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 impl Load for Connection {
     type Metric = usize;
 

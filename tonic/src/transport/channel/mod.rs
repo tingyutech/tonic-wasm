@@ -4,6 +4,7 @@ mod endpoint;
 pub(crate) mod service;
 #[cfg(feature = "_tls-any")]
 mod tls;
+#[cfg(not(target_arch = "wasm32"))]
 mod uds_connector;
 
 pub use self::service::Change;
@@ -28,6 +29,7 @@ use std::{
 use tokio::sync::mpsc::{channel, Sender};
 
 use hyper::rt;
+#[cfg(not(target_arch = "wasm32"))]
 use tower::balance::p2c::Balance;
 use tower::{
     buffer::{future::ResponseFuture as BufferResponseFuture, Buffer},
@@ -107,6 +109,7 @@ impl Channel {
     ///
     /// This creates a [`Channel`] that will load balance across all the
     /// provided endpoints.
+    #[cfg(not(target_arch = "wasm32"))]
     pub fn balance_list(list: impl Iterator<Item = Endpoint>) -> Self {
         let (channel, tx) = Self::balance_channel(DEFAULT_BUFFER_SIZE);
         list.for_each(|endpoint| {
@@ -120,6 +123,8 @@ impl Channel {
     /// Balance a list of [`Endpoint`]'s.
     ///
     /// This creates a [`Channel`] that will listen to a stream of change events and will add or remove provided endpoints.
+
+    #[cfg(not(target_arch = "wasm32"))]
     pub fn balance_channel<K>(capacity: usize) -> (Self, Sender<Change<K, Endpoint>>)
     where
         K: Hash + Eq + Send + Clone + 'static,
@@ -132,6 +137,7 @@ impl Channel {
     /// This creates a [`Channel`] that will listen to a stream of change events and will add or remove provided endpoints.
     ///
     /// The [`Channel`] will use the given executor to spawn async tasks.
+    #[cfg(not(target_arch = "wasm32"))]
     pub fn balance_channel_with_executor<K, E>(
         capacity: usize,
         executor: E,
@@ -188,6 +194,7 @@ impl Channel {
         Ok(Channel { svc })
     }
 
+    #[cfg(not(target_arch = "wasm32"))]
     pub(crate) fn balance<D, E>(discover: D, buffer_size: usize, executor: E) -> Self
     where
         D: Discover<Service = Connection> + Unpin + Send + 'static,
