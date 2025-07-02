@@ -64,6 +64,7 @@ channel-web = [
   "tower?/limit",
   "tower?/util",
   "dep:tokio", "tokio?/time",
+  "dep:wasmtimer",
 ]
 transport = ["server", "channel", "channel-native"]
 
@@ -111,6 +112,7 @@ zstd = { version = "0.13.0", optional = true }
 
 # channel
 hyper-timeout = {version = "0.5", optional = true}
+wasmtimer = {version = "0.4.2", optional = true}
 
 [dev-dependencies]
 bencher = "0.1.5"
