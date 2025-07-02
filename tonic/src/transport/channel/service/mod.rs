@@ -27,3 +27,6 @@ pub(super) use self::executor::{Executor, SharedExec};
 mod tls;
 #[cfg(feature = "_tls-any")]
 pub(super) use self::tls::TlsConnector;
+
+#[cfg(target_arch = "wasm32")]
+mod wasm_timer;

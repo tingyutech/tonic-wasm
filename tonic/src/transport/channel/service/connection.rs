@@ -1,4 +1,6 @@
 use super::{AddOrigin, Reconnect, SharedExec, UserAgent};
+#[cfg(target_arch = "wasm32")]
+use crate::transport::channel::service::wasm_timer::WasmTimer;
 use crate::{
     body::Body,
     transport::{channel::BoxFuture, service::GrpcTimeout, Endpoint},
@@ -44,9 +46,7 @@ impl Connection {
 
         #[cfg(target_arch = "wasm32")]
         let mut settings: Builder<SharedExec> = Builder::new(endpoint.executor.clone())
-            .initial_stream_window_size(endpoint.init_stream_window_size)
-            .initial_connection_window_size(endpoint.init_connection_window_size)
-            .keep_alive_interval(endpoint.http2_keep_alive_interval)
+            .timer(WasmTimer::new())
             .clone();
 
         if let Some(val) = endpoint.http2_keep_alive_timeout {
